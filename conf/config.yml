@@ -1,0 +1,14 @@
+ingest:
+  baseDir: /soft/video-prep/work/in
+  thumbDir: /soft/video-prep/work/out
+db:
+  host: localhost
+  port: 54321
+  user: postgres
+  password: passwd
+  database: postgres
+  schema: media
+  sslmode: disable
+log:
+  path: ext/log/log.txt
+
