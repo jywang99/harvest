@@ -8,6 +8,12 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
+type ingestConfig struct {
+    BaseDir   string `yaml:"baseDir"`
+    ThumbDir  string `yaml:"thumbDir"`
+    IndexFile string `yaml:"indexFile"`
+}
+
 type dbConfig struct {
     Host     string `yaml:"host"`
     User     string `yaml:"user"`
@@ -23,6 +29,7 @@ type logConfig struct {
 }
 
 type config struct {
+    Ingest ingestConfig `yaml:"ingest"`
     DB dbConfig `yaml:"db"`
     Log logConfig `yaml:"log"`
 }

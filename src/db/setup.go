@@ -19,7 +19,7 @@ type DbConn struct {
 
 func Setup() *DbConn {
 	// urlExample := "postgres://username:password@localhost:5432/database_name"
-    url := fmt.Sprintf("postgres://%s:%s@%s:%d/%s?sslmode=%s", cfg.User, cfg.Password, cfg.Host, cfg.Port, cfg.Database, cfg.SSLMode)
+    url := fmt.Sprintf("postgres://%s:%s@%s:%d/%s?sslmode=%s&search_path=%s", cfg.User, cfg.Password, cfg.Host, cfg.Port, cfg.Database, cfg.SSLMode, cfg.Schema)
 	conn, err := pgx.Connect(context.Background(), url)
 	if err != nil {
         logger.ERROR.Printf("Error connecting to database: %v\n", url)
