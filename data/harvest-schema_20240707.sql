@@ -2,7 +2,7 @@
 -- PostgreSQL database cluster dump
 --
 
--- Started on 2024-07-06 16:25:51 UTC
+-- Started on 2024-07-07 14:23:13 UTC
 
 SET default_transaction_read_only = off;
 
@@ -38,7 +38,7 @@ ALTER ROLE postgres WITH SUPERUSER INHERIT CREATEROLE CREATEDB LOGIN REPLICATION
 -- Dumped from database version 12.19 (Debian 12.19-1.pgdg120+1)
 -- Dumped by pg_dump version 12.19
 
--- Started on 2024-07-06 16:25:51 UTC
+-- Started on 2024-07-07 14:23:13 UTC
 
 SET statement_timeout = 0;
 SET lock_timeout = 0;
@@ -51,7 +51,7 @@ SET xmloption = content;
 SET client_min_messages = warning;
 SET row_security = off;
 
--- Completed on 2024-07-06 16:25:51 UTC
+-- Completed on 2024-07-07 14:23:13 UTC
 
 --
 -- PostgreSQL database dump complete
@@ -70,7 +70,7 @@ SET row_security = off;
 -- Dumped from database version 12.19 (Debian 12.19-1.pgdg120+1)
 -- Dumped by pg_dump version 12.19
 
--- Started on 2024-07-06 16:25:51 UTC
+-- Started on 2024-07-07 14:23:13 UTC
 
 SET statement_timeout = 0;
 SET lock_timeout = 0;
@@ -106,7 +106,7 @@ CREATE TABLE media.collection (
     id integer NOT NULL,
     path text NOT NULL,
     disp_name text,
-    parent integer NOT NULL
+    parent integer
 );
 
 
@@ -129,7 +129,7 @@ CREATE SEQUENCE media.collection_id_seq
 ALTER TABLE media.collection_id_seq OWNER TO postgres;
 
 --
--- TOC entry 3005 (class 0 OID 0)
+-- TOC entry 3006 (class 0 OID 0)
 -- Dependencies: 203
 -- Name: collection_id_seq; Type: SEQUENCE OWNED BY; Schema: media; Owner: postgres
 --
@@ -154,7 +154,7 @@ CREATE SEQUENCE media.collection_parent_seq
 ALTER TABLE media.collection_parent_seq OWNER TO postgres;
 
 --
--- TOC entry 3006 (class 0 OID 0)
+-- TOC entry 3007 (class 0 OID 0)
 -- Dependencies: 204
 -- Name: collection_parent_seq; Type: SEQUENCE OWNED BY; Schema: media; Owner: postgres
 --
@@ -172,9 +172,9 @@ CREATE TABLE media.entry (
     path text NOT NULL,
     disp_name text,
     "desc" text,
-    is_dir boolean DEFAULT false NOT NULL,
-    parent integer NOT NULL,
-    thumb_paths text[]
+    parent integer,
+    thumb_static text,
+    thumb_dynamic text[]
 );
 
 
@@ -197,7 +197,7 @@ CREATE SEQUENCE media.entry_id_seq
 ALTER TABLE media.entry_id_seq OWNER TO postgres;
 
 --
--- TOC entry 3007 (class 0 OID 0)
+-- TOC entry 3008 (class 0 OID 0)
 -- Dependencies: 206
 -- Name: entry_id_seq; Type: SEQUENCE OWNED BY; Schema: media; Owner: postgres
 --
@@ -222,7 +222,7 @@ CREATE SEQUENCE media.entry_parent_seq
 ALTER TABLE media.entry_parent_seq OWNER TO postgres;
 
 --
--- TOC entry 3008 (class 0 OID 0)
+-- TOC entry 3009 (class 0 OID 0)
 -- Dependencies: 207
 -- Name: entry_parent_seq; Type: SEQUENCE OWNED BY; Schema: media; Owner: postgres
 --
@@ -239,15 +239,7 @@ ALTER TABLE ONLY media.collection ALTER COLUMN id SET DEFAULT nextval('media.col
 
 
 --
--- TOC entry 2864 (class 2604 OID 16393)
--- Name: collection parent; Type: DEFAULT; Schema: media; Owner: postgres
---
-
-ALTER TABLE ONLY media.collection ALTER COLUMN parent SET DEFAULT nextval('media.collection_parent_seq'::regclass);
-
-
---
--- TOC entry 2865 (class 2604 OID 16411)
+-- TOC entry 2864 (class 2604 OID 16411)
 -- Name: entry id; Type: DEFAULT; Schema: media; Owner: postgres
 --
 
@@ -255,15 +247,7 @@ ALTER TABLE ONLY media.entry ALTER COLUMN id SET DEFAULT nextval('media.entry_id
 
 
 --
--- TOC entry 2867 (class 2604 OID 16413)
--- Name: entry parent; Type: DEFAULT; Schema: media; Owner: postgres
---
-
-ALTER TABLE ONLY media.entry ALTER COLUMN parent SET DEFAULT nextval('media.entry_parent_seq'::regclass);
-
-
---
--- TOC entry 2869 (class 2606 OID 16398)
+-- TOC entry 2866 (class 2606 OID 16398)
 -- Name: collection pk_collection; Type: CONSTRAINT; Schema: media; Owner: postgres
 --
 
@@ -272,7 +256,7 @@ ALTER TABLE ONLY media.collection
 
 
 --
--- TOC entry 2871 (class 2606 OID 16418)
+-- TOC entry 2870 (class 2606 OID 16418)
 -- Name: entry pk_entry; Type: CONSTRAINT; Schema: media; Owner: postgres
 --
 
@@ -281,7 +265,25 @@ ALTER TABLE ONLY media.entry
 
 
 --
--- TOC entry 2872 (class 2606 OID 16399)
+-- TOC entry 2872 (class 2606 OID 16427)
+-- Name: entry unique_parent_path; Type: CONSTRAINT; Schema: media; Owner: postgres
+--
+
+ALTER TABLE ONLY media.entry
+    ADD CONSTRAINT unique_parent_path UNIQUE (path, parent);
+
+
+--
+-- TOC entry 2868 (class 2606 OID 16425)
+-- Name: collection unique_path; Type: CONSTRAINT; Schema: media; Owner: postgres
+--
+
+ALTER TABLE ONLY media.collection
+    ADD CONSTRAINT unique_path UNIQUE (path);
+
+
+--
+-- TOC entry 2873 (class 2606 OID 16399)
 -- Name: collection fk_collection_self; Type: FK CONSTRAINT; Schema: media; Owner: postgres
 --
 
@@ -290,7 +292,7 @@ ALTER TABLE ONLY media.collection
 
 
 --
--- TOC entry 2873 (class 2606 OID 16419)
+-- TOC entry 2874 (class 2606 OID 16419)
 -- Name: entry fk_entry_parent; Type: FK CONSTRAINT; Schema: media; Owner: postgres
 --
 
@@ -298,13 +300,13 @@ ALTER TABLE ONLY media.entry
     ADD CONSTRAINT fk_entry_parent FOREIGN KEY (parent) REFERENCES media.collection(id);
 
 
--- Completed on 2024-07-06 16:25:51 UTC
+-- Completed on 2024-07-07 14:23:14 UTC
 
 --
 -- PostgreSQL database dump complete
 --
 
--- Completed on 2024-07-06 16:25:51 UTC
+-- Completed on 2024-07-07 14:23:14 UTC
 
 --
 -- PostgreSQL database cluster dump complete

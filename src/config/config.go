@@ -1,11 +1,9 @@
 package config
 
 import (
-	"log"
+	"errors"
 	"os"
-	"path"
-
-	"gopkg.in/yaml.v2"
+	"path/filepath"
 )
 
 type ingestConfig struct {
@@ -34,32 +32,54 @@ type config struct {
     Log logConfig `yaml:"log"`
 }
 
-var basePath = "conf/" // TODO no hardcoding
-var configPath = path.Join(basePath, "config.yml")
-
-func readYmlConfig(cfg *config) {
-    f, err := os.Open(configPath)
-    if err != nil {
-        log.Fatal(err)
-    }
-    defer f.Close()
-
-    s, _ := f.Stat()
-    if s.Size() == 0 {
-        return
-    }
-
-    decoder := yaml.NewDecoder(f)
-    err = decoder.Decode(&cfg)
-    if err != nil {
-        log.Fatal(err)
-    }
+var Config = &config{
+    Ingest: ingestConfig{},
+    DB: dbConfig{},
+    Log: logConfig{
+        Path: "/tmp/harvest.log",
+    },
 }
 
-func initConfig() *config {
-    var cfg config
-    readYmlConfig(&cfg)
-    return &cfg
+func Validate() error {
+    ingest := Config.Ingest
+    if !dirExists(ingest.BaseDir) {
+        return errors.New("Input directory does not exist")
+    }
+    if !dirExists(ingest.ThumbDir) {
+        return errors.New("Thumbnail directory does not exist")
+    }
+    if !fileExists(ingest.IndexFile) {
+        return errors.New("Index file does not exist")
+    }
+
+    db := Config.DB
+    if db.Host == "" || db.User == "" || db.Password == "" || db.Database == "" || db.Schema == "" || db.SSLMode == "" || db.Port == 0 {
+        return errors.New("Invalid database configuration")
+    }
+
+    logs := Config.Log
+    if logs.Path != "" && !parentDirExists(logs.Path) {
+        return errors.New("Invalid log file path")
+    }
+
+    return nil
 }
-var Config = initConfig()
+
+func fileExists(path string) bool {
+    _, err := os.Stat(path)
+    return err == nil
+}
+
+func parentDirExists(path string) bool {
+    parent := filepath.Dir(path)
+    return dirExists(parent)
+}
+
+func dirExists(dir string) bool {
+    if dir == "" {
+        return false
+    }
+    _, err := os.Stat(dir)
+    return err == nil
+}
 

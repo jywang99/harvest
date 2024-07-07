@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"log"
 	"path/filepath"
 
 	"jy.org/harvest/src/config"
@@ -14,16 +15,26 @@ var cfg = config.Config
 var logger = logging.Logger
 
 func main() {
-    logger.INFO.Println("Starting harvester")
-    defer logger.INFO.Println("Exiting harvester")
+    // read config
+    args := parseArgs()
+    config.Override(args.config)
+    err := config.Validate()
+    if err != nil {
+        log.Fatal(err)
+        return
+    }
 
+    // init loggers
+    logging.InitLogFiles()
+    logger.INFO.Println("Starting harvest")
+    defer logger.INFO.Println("Exiting harvest")
+    logger.INFO.Printf("Config: %+v\n", cfg)
+
+    db.Setup()
     dbconn := db.Conn
     defer dbconn.Close()
 
-    logger.INFO.Printf("Config: %+v\n", cfg)
-
-    indexFile := filepath.Join(cfg.Ingest.ThumbDir, cfg.Ingest.IndexFile)
-    reader, err := files.NewFileReader(indexFile)
+    reader, err := files.NewFileReader(cfg.Ingest.IndexFile)
     if err != nil {
         logger.ERROR.Printf("Error when creating index file reader")
         return

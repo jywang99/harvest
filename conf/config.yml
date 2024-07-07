@@ -1,7 +1,7 @@
 ingest:
-  baseDir: /soft/video-prep/work/in
+  baseDir: /mnt/f
   thumbDir: /soft/video-prep/work/out
-  indexFile: index.txt
+  indexFile: /soft/video-prep/work/out/index.txt
 db:
   host: localhost
   port: 54321
