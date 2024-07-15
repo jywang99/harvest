@@ -10,6 +10,11 @@ type ingestConfig struct {
     BaseDir   string `yaml:"baseDir"`
     ThumbDir  string `yaml:"thumbDir"`
     IndexFile string `yaml:"indexFile"`
+    ExtStr string `yaml:"exts"`
+    ExtMap map[string]bool
+    IgnoreStr string `yaml:"ignore"`
+    IgnoreMap map[string]bool
+    DotFiles bool `yaml:"dotfiles"`
 }
 
 type dbConfig struct {
@@ -50,6 +55,9 @@ func Validate() error {
     }
     if !fileExists(ingest.IndexFile) {
         return errors.New("Index file does not exist")
+    }
+    if len(ingest.ExtMap) == 0 {
+        return errors.New("No file extensions specified")
     }
 
     db := Config.DB

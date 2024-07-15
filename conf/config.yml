@@ -1,7 +1,10 @@
 ingest:
   baseDir: /mnt/f
-  thumbDir: /soft/video-prep/work/out
-  indexFile: /soft/video-prep/work/out/index.txt
+  thumbDir: /soft/thumbgen/work/out
+  indexFile: /soft/thumbgen/work/out/index.txt
+  exts: jpg:jpeg:png:gif:webp:mp4:mkv:avi:mov:wmv:webm
+  dotfiles: false
+  ignore: $RECYCLE.BIN:System Volume Information:.Trashes:.fseventsd:.Spotlight-V100:thumbs:models
 db:
   host: localhost
   port: 54321

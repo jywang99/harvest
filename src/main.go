@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"log"
+	"os"
 	"path/filepath"
 
 	"jy.org/harvest/src/config"
@@ -53,19 +54,20 @@ func main() {
 }
 
 func ingest(relpath string) {
-    file := filepath.Join(cfg.Ingest.BaseDir, relpath)
-    logger.INFO.Printf("[Ingest start] %s\n", file)
+    abspath := filepath.Join(cfg.Ingest.BaseDir, relpath)
+    logger.INFO.Printf("[Ingest start] %s\n", abspath)
 
-    if !files.VerifyFileExists(file) {
-        logger.ERROR.Printf("[Ingest end][ERROR] File does not exist: %s\n", file)
+    stat, e := os.Stat(abspath)
+    if e != nil {
+        logger.ERROR.Printf("[Ingest end][ERROR] Error trying to stat file %s\n", abspath)
         return
     }
 
     ctx := context.Background()
     conn := db.Conn
 
-    // Get or insert collection
-    dir := filepath.Dir(file)
+    // Get or insert parent collection
+    dir := filepath.Dir(abspath)
     pcid := conn.GetCollectionId(ctx, dir)
     var cid int
     if pcid == nil {
@@ -74,21 +76,30 @@ func ingest(relpath string) {
         cid = *pcid
     }
 
+    // Thumbnails
+    stripped := filepath.Join(cfg.Ingest.ThumbDir, relpath)
+    if !stat.IsDir() {
+        stripped = files.RemoveExt(stripped)
+    }
+    ppng, _ := files.VerifyAndGetBasename(stripped + ".png")
+    pgif, _ := files.VerifyAndGetBasename(stripped + ".gif")
+
+    // content files (relative paths)
+    var pfiles *[]string
+    if stat.IsDir() {
+        files, err := files.GetFilesInDir(abspath)
+        if err != nil {
+            logger.ERROR.Printf("[Ingest end][ERROR] Error when getting files in directory %s\n", abspath)
+            return
+        }
+        pfiles = &files
+    }
+
     // Insert or update entry
-    stripped := filepath.Join(cfg.Ingest.ThumbDir, files.RemoveExt(relpath))
-    png := stripped + ".png"
-    gif := stripped + ".gif"
-    var ppng, pgif *string
-    if files.VerifyFileExists(png) {
-        ppng = &png
-    }
-    if files.VerifyFileExists(gif) {
-        pgif = &gif
-    }
-    if !conn.EntryExists(ctx, file) {
-        conn.InsertEntry(ctx, file, filepath.Base(stripped), ppng, pgif, cid)
+    if !conn.EntryExists(ctx, relpath) {
+        conn.InsertEntry(ctx, relpath, filepath.Base(stripped), ppng, pgif, cid, pfiles)
     } else {
-        conn.UpdateEntry(ctx, file, ppng, pgif)
+        conn.UpdateEntry(ctx, relpath, ppng, pgif, pfiles)
     }
 
     logger.INFO.Println("[Ingest end][ok]")

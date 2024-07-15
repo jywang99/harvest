@@ -33,6 +33,10 @@ func loadYml(configPath string) {
     if err != nil {
         log.Fatal(err)
     }
+
+    Config.Ingest.IgnoreMap = stringToMap(Config.Ingest.IgnoreStr)
+    Config.Ingest.ExtMap = stringToMap(Config.Ingest.ExtStr)
+
 }
 
 func Override(override ConfigOverride) {

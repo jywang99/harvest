@@ -39,7 +39,7 @@ func (db *DbConn) EntryExists(ctx context.Context, path string) bool {
     return exists
 }
 
-func (db *DbConn) InsertEntry(ctx context.Context, path, name string, png, gif *string, parentId int) int {
+func (db *DbConn) InsertEntry(ctx context.Context, path, name string, png, gif *string, parentId int, files *[]string) int {
     var dthumbs []*string
     if gif != nil {
         dthumbs = []*string{gif}
@@ -47,8 +47,8 @@ func (db *DbConn) InsertEntry(ctx context.Context, path, name string, png, gif *
 
     var id int
     err := db.conn.QueryRow(ctx, 
-        "INSERT INTO entry (path, disp_name, thumb_static, thumb_dynamic, parent) VALUES ($1, $2, $3, $4, $5) RETURNING id", 
-        path, name, png, dthumbs, parentId,
+        "INSERT INTO entry (path, disp_name, thumb_static, thumb_dynamic, parent, content_files) VALUES ($1, $2, $3, $4, $5, $6) RETURNING id", 
+        path, name, png, dthumbs, parentId, files,
     ).Scan(&id)
     if err != nil {
         panic(err)
@@ -56,12 +56,12 @@ func (db *DbConn) InsertEntry(ctx context.Context, path, name string, png, gif *
     return id
 }
 
-func (db *DbConn) UpdateEntry(ctx context.Context, path string, png, gif *string) {
+func (db *DbConn) UpdateEntry(ctx context.Context, path string, png, gif *string, files *[]string) {
     var dthumbs []*string
     if gif != nil {
         dthumbs = []*string{gif}
     }
-    _, err := db.conn.Exec(ctx, "UPDATE entry SET thumb_static = $2, thumb_dynamic = $3 WHERE path = $1", path, png, dthumbs)
+    _, err := db.conn.Exec(ctx, "UPDATE entry SET thumb_static = $2, thumb_dynamic = $3, content_files = $4 WHERE path = $1", path, png, dthumbs, files)
     if err != nil {
         panic(err)
     }
